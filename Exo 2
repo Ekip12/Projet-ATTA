@@ -1,0 +1,89 @@
+import random
+
+class Case:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        
+    def __str__(self):
+        return f"({self.x}, {self.y})"
+    
+    def is_adjacent(self, other_case):
+        return abs(self.x - other_case.x) <= 1 and abs(self.y - other_case.y) <= 1
+    
+    def is_equal(self, other_case):
+        return self.x == other_case.x and self.y == other_case.y
+    
+    def get_adjacent_cases(self, jeu):
+        adjacent_cases = []
+        for case in jeu.listeDesCases:
+            if self.is_adjacent(case) and not self.is_equal(case):
+                adjacent_cases.append(case)
+        return adjacent_cases
+
+class Creature:
+    def __init__(self, nom, position):
+        self.nom = nom
+        self.position = position
+        
+    def __str__(self):
+        return f"Creature {self.nom} @ {self.position}"
+    
+    def choisirCible(self, jeu):
+        adjacent_cases = self.position.get_adjacent_cases(jeu)
+        cases_occupees = [case for case in adjacent_cases if jeu.estOccupee(case)]
+        
+        if cases_occupees:
+            return random.choice(cases_occupees)
+        else:
+            return random.choice(adjacent_cases)
+        
+class Jeu:
+    def __init__(self, listeDesCases, listeDesCreatures):
+        self.listeDesCases = listeDesCases
+        self.listeDesCreatures = listeDesCreatures
+        self.tour = 1
+        self.actif = listeDesCreatures[0]
+        
+    def __str__(self):
+        return f"Tour {self.tour}: {self.actif.nom} est actif."
+    
+    def estOccupee(self, case):
+        for creature in self.listeDesCreatures:
+            if creature.position.is_equal(case):
+                return True
+        return False
+    
+    def deplacer(self, creature, nouvelle_case):
+        if nouvelle_case.is_equal(creature.position):
+            print(f"{creature.nom} reste sur place.")
+            return
+        
+        if self.estOccupee(nouvelle_case):
+            for target in self.listeDesCreatures:
+                if target.position.is_equal(nouvelle_case):
+                    print(f"{creature.nom} capture {target.nom} ! {creature.nom} a gagné !")
+                    return
+        
+        creature.position = nouvelle_case
+        print(f"{creature.nom} se déplace vers {nouvelle_case}.")
+        
+        self.tour += 1
+        self.actif = self.listeDesCreatures[self.tour % len(self.listeDesCreatures)]
+
+# Exemple d'utilisation
+if __name__ == "__main__":
+    case1 = Case(0, 0)
+    case2 = Case(1, 1)
+    case3 = Case(2, 2)
+    
+    creature1 = Creature("A", case1)
+    creature2 = Creature("B", case3)
+    
+    jeu = Jeu([case1, case2, case3], [creature1, creature2])
+    
+    print(jeu)
+    creature = jeu.actif
+    cible = creature.choisirCible(jeu)
+    jeu.deplacer(creature, cible)
+    print(jeu)
